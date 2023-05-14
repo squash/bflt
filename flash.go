@@ -46,7 +46,7 @@ func (f *Flash) DeleteBlock(b *FlashBlock) {
 
 func (f *Flash) Sort() {
 	sort.Slice(f.Blocks, func(x, y int) bool {
-		return f.Blocks[x].Number > f.Blocks[y].Number
+		return f.Blocks[x].Number < f.Blocks[y].Number
 	})
 }
 
@@ -58,7 +58,6 @@ func (f *Flash) NewBlock() *FlashBlock {
 	return &b
 }
 
-// TODO: don't allow blocks to overlap
 func (f *Flash) Assemble() ([]byte, []byte, error) {
 	image := make([]byte, f.Size)
 	x := 0
@@ -72,6 +71,7 @@ func (f *Flash) Assemble() ([]byte, []byte, error) {
 
 		start := 0
 		for _, b := range f.Blocks {
+			log.Printf("Adding block %d: %s at %x", b.Number, b.Filename, b.Offset)
 			nun := copy(image[start:], b.Data[:])
 			if nun != len(b.Data) {
 				return nil, nil, fmt.Errorf("expected %d bytes but got %d instead", len(b.Data), nun)
