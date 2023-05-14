@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 )
 
@@ -15,28 +16,25 @@ type FlashBlock struct {
 	PadWithData byte
 	Filename    string
 }
-type flash struct {
+type Flash struct {
 	Blocks          []*FlashBlock
 	Size            int
 	count           int
 	AutomaticOffset bool
 }
 
-func NewFlash() *flash {
-	var f flash
+func NewFlash() *Flash {
+	var f Flash
 	f.count = 0
 	return &f
 }
 
-func (f *flash) SetSize(s int) {
+func (f *Flash) SetSize(s int) {
 	f.Size = s
 }
 
-func (f *flash) AddBlock(b *FlashBlock) {
-	f.Blocks = append(f.Blocks, b)
-}
 
-func (f *flash) DeleteBlock(b *FlashBlock) {
+func (f *Flash) DeleteBlock(b *FlashBlock) {
 	var newb []*FlashBlock
 	for x := range f.Blocks {
 		if f.Blocks[x].Number != b.Number {
@@ -46,15 +44,22 @@ func (f *flash) DeleteBlock(b *FlashBlock) {
 	f.Blocks = newb
 }
 
-func (f *flash) NewBlock() *FlashBlock {
+func (f *Flash) Sort() {
+	sort.Slice(f.Blocks, func(x, y int) bool {
+		return f.Blocks[x].Number > f.Blocks[y].Number
+	})
+}
+
+func (f *Flash) NewBlock() *FlashBlock {
 	var b FlashBlock
 	b.Number = f.count
 	f.count++
+	f.Blocks=append(f.Blocks, &b)
 	return &b
 }
 
 // TODO: don't allow blocks to overlap
-func (f *flash) Assemble() ([]byte, []byte, error) {
+func (f *Flash) Assemble() ([]byte, []byte, error) {
 	image := make([]byte, f.Size)
 	x := 0
 	for x = 0; x < f.Size; x++ {
@@ -77,9 +82,9 @@ func (f *flash) Assemble() ([]byte, []byte, error) {
 				}
 
 			}
-			end:= start + b.PadToSize
+			end := start + b.PadToSize
 			locations = append(locations, fmt.Sprintf("0x%x,0x%x,0x%x,%s", start, b.PadToSize, end, b.Filename))
-			start=end
+			start = end
 		}
 		l := strings.Join(locations, "\n")
 		return image, []byte(l), nil
