@@ -161,8 +161,7 @@ func editBlock(b *FlashBlock, f *Flash, blocksForm *widget.Form) {
 		refreshBlockList(f, blocksForm)
 		bfi.bw.Close()
 	}))
-	bfi.blockForm.Append("", widget.NewSeparator())
-	bfi.bw.Resize(fyne.Size{Width: 600, Height: 400})
+	bfi.bw.Resize(fyne.Size{Width: 640, Height: 480})
 	bfi.bw.SetContent(bfi.blockForm)
 	bfi.bw.Show()
 }
@@ -174,10 +173,13 @@ func refreshBlockList(f *Flash, blocksForm *widget.Form) {
 	for x := range f.Blocks {
 		b := f.Blocks[x]
 		log.Printf("Adding block %d", b.Number)
-		blocksItem := widget.NewFormItem(fmt.Sprintf("%s@%x", b.Filename, b.Offset), widget.NewButton("Edit", func() {
+		blocksItem := widget.NewFormItem(b.Filename, widget.NewButton("Edit", func() {
 			editBlock(b, f, blocksForm)
 			refreshBlockList(f, blocksForm)
 		}))
+		if !f.AutomaticOffset {
+			blocksItem.Text=fmt.Sprintf("%s@0x%x", b.Filename, b.Offset)
+		}
 		o.AppendItem(blocksItem)
 		o.Append("---", widget.NewSeparator())
 
